@@ -47,7 +47,8 @@ class APC40(APC):
         self._session.set_scene_bank_buttons(down_button, up_button)
         matrix = ButtonMatrixElement()
         matrix.name = 'Button_Matrix'
-        scene_launch_buttons = [ ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, (index + 82)) for index in range(5) ]
+        scene_launch_buttons = [ ConfigurableButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, (index + 82)) for index in range(5) ]
+        self._double_buttons = [ ConfigurableButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, (index + 82)) for index in range(5) ]
         track_stop_buttons = [ ButtonElement(is_momentary, MIDI_NOTE_TYPE, index, 52) for index in range(8) ]
         for index in range(len(scene_launch_buttons)):
             scene_launch_buttons[index].name = 'Scene_'+ str(index) + '_Launch_Button'
@@ -72,9 +73,9 @@ class APC40(APC):
                 clip_slot.name = str(track_index) + '_Clip_Slot_' + str(scene_index)
                 clip_slot.set_triggered_to_play_value(2)
                 clip_slot.set_triggered_to_record_value(4)
-                clip_slot.set_stopped_value(5)
+                clip_slot.set_stopped_value(3)
                 clip_slot.set_started_value(1)
-                clip_slot.set_recording_value(3)
+                clip_slot.set_recording_value(5)
                 clip_slot.set_launch_button(button)
 
             matrix.add_row(tuple(button_row))
@@ -156,12 +157,15 @@ class APC40(APC):
             ringed_encoder.name = 'Device_Control_' + str(index)
             ring_mode_button.name = ringed_encoder.name + '_Ring_Mode_Button'
             device_param_controls.append(ringed_encoder)
+            
         device = ShiftableDeviceComponent()
         device.name = 'Device_Component'
         device.set_bank_buttons(tuple(device_bank_buttons))
         device.set_shift_button(self._shift_button)
         device.set_parameter_controls(tuple(device_param_controls))
         device.set_on_off_button(device_bank_buttons[1])
+
+        
         self.set_device_component(device)
         detail_view_toggler = DetailViewControllerComponent()
         detail_view_toggler.name = 'Detail_View_Control'
@@ -191,7 +195,10 @@ class APC40(APC):
         transport.set_tap_tempo_button(tap_tempo_button)
         transport.set_quant_toggle_button(device_bank_buttons[5])
         transport.set_overdub_button(device_bank_buttons[6])
-        transport.set_metronome_button(device_bank_buttons[7])
+
+        # The metronome button is device lock instead
+        #transport.set_metronome_button(device_bank_buttons[7])
+        device.set_lock_button(device_bank_buttons[7]) #assign device lock to bank_button 8 (in place of metronome)...
 
         transport.set_tempo_encoder(self.prehear_control)
 
