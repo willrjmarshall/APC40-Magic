@@ -13,6 +13,7 @@ from _Framework.ChannelStripComponent import ChannelStripComponent
 from _Framework.SceneComponent import SceneComponent
 from _Framework.SessionZoomingComponent import SessionZoomingComponent
 from _Framework.ChannelTranslationSelector import ChannelTranslationSelector
+from _Framework.ModeSelectorComponent import ModeSelectorComponent 
 from EncoderMixerModeSelectorComponent import EncoderMixerModeSelectorComponent
 from RingedEncoderElement import RingedEncoderElement
 from DetailViewControllerComponent import DetailViewControllerComponent
@@ -22,12 +23,13 @@ from ShiftableTranslatorComponent import ShiftableTranslatorComponent
 from PedaledSessionComponent import PedaledSessionComponent
 from SpecialMixerComponent import SpecialMixerComponent
 from ConfigurableButtonElement import ConfigurableButtonElement
+from SceneUserModeComponent import SceneUserModeComponent
 
 class APC40(APC):
     __doc__ = " Script for Akai's APC40 Controller "
     def __init__(self, c_instance):
         APC.__init__(self, c_instance)
-
+    
     def _setup_session_control(self):
         is_momentary = True
         self._shift_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 98)        
@@ -45,31 +47,22 @@ class APC40(APC):
         self._session.set_scene_bank_buttons(down_button, up_button)
         matrix = ButtonMatrixElement()
         matrix.name = 'Button_Matrix'
+        scene_launch_buttons = [ ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, (index + 82)) for index in range(5) ]
         track_stop_buttons = [ ButtonElement(is_momentary, MIDI_NOTE_TYPE, index, 52) for index in range(8) ]
-
-
-
-        # Setting up the scene launch buttons as custom momentary buttoms instead. For FX
-        for index in range(5):
-          launch_button = ConfigurableButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, (index + 82))
-
-
-
-
+        for index in range(len(scene_launch_buttons)):
+            scene_launch_buttons[index].name = 'Scene_'+ str(index) + '_Launch_Button'
         for index in range(len(track_stop_buttons)):
             track_stop_buttons[index].name = 'Track_' + str(index) + '_Stop_Button'
         stop_all_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 81)
         stop_all_button.name = 'Stop_All_Clips_Button'
         self._session.set_stop_all_clips_button(stop_all_button)
         self._session.set_stop_track_clip_buttons(tuple(track_stop_buttons))
-
         self._session.set_stop_track_clip_value(2)
-
         for scene_index in range(5):
             scene = self._session.scene(scene_index)
             scene.name = 'Scene_' + str(scene_index)
             button_row = []
-            # scene.set_launch_button(scene_launch_buttons[scene_index])
+            scene.set_launch_button(scene_launch_buttons[scene_index])
             scene.set_triggered_value(2)
             for track_index in range(8):
                 button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, track_index, (scene_index + 53))
@@ -79,9 +72,9 @@ class APC40(APC):
                 clip_slot.name = str(track_index) + '_Clip_Slot_' + str(scene_index)
                 clip_slot.set_triggered_to_play_value(2)
                 clip_slot.set_triggered_to_record_value(4)
-                clip_slot.set_stopped_value(3)
+                clip_slot.set_stopped_value(5)
                 clip_slot.set_started_value(1)
-                clip_slot.set_recording_value(5)
+                clip_slot.set_recording_value(3)
                 clip_slot.set_launch_button(button)
 
             matrix.add_row(tuple(button_row))
@@ -94,10 +87,14 @@ class APC40(APC):
         self._session_zoom.set_button_matrix(matrix)
         self._session_zoom.set_zoom_button(self._shift_button)
         self._session_zoom.set_nav_buttons(up_button, down_button, left_button, right_button)
-        #self._session_zoom.set_scene_bank_buttons(tuple(scene_launch_buttons))
+        self._session_zoom.set_scene_bank_buttons(tuple(scene_launch_buttons))
         self._session_zoom.set_stopped_value(3)
         self._session_zoom.set_selected_value(5)
+
+        scene_user_mode = SceneUserModeComponent(self._session, self._session_zoom, self)
+        
         return None #return session
+
 
     def _setup_mixer_control(self):
         is_momentary = True
