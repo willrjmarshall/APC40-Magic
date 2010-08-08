@@ -21,6 +21,8 @@ from ShiftableTransportComponent import ShiftableTransportComponent
 from ShiftableTranslatorComponent import ShiftableTranslatorComponent
 from PedaledSessionComponent import PedaledSessionComponent
 from SpecialMixerComponent import SpecialMixerComponent
+from ConfigurableButtonElement import ConfigurableButtonElement
+
 class APC40(APC):
     __doc__ = " Script for Akai's APC40 Controller "
     def __init__(self, c_instance):
@@ -43,10 +45,17 @@ class APC40(APC):
         self._session.set_scene_bank_buttons(down_button, up_button)
         matrix = ButtonMatrixElement()
         matrix.name = 'Button_Matrix'
-        scene_launch_buttons = [ ButtonElement(False, MIDI_NOTE_TYPE, 0, (index + 82)) for index in range(5) ]
         track_stop_buttons = [ ButtonElement(is_momentary, MIDI_NOTE_TYPE, index, 52) for index in range(8) ]
-        for index in range(len(scene_launch_buttons)):
-            scene_launch_buttons[index].name = 'Scene_'+ str(index) + '_Launch_Button'
+
+
+
+        # Setting up the scene launch buttons as custom momentary buttoms instead. For FX
+        for index in range(5):
+          launch_button = ConfigurableButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, (index + 82))
+
+
+
+
         for index in range(len(track_stop_buttons)):
             track_stop_buttons[index].name = 'Track_' + str(index) + '_Stop_Button'
         stop_all_button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, 0, 81)
@@ -60,7 +69,7 @@ class APC40(APC):
             scene = self._session.scene(scene_index)
             scene.name = 'Scene_' + str(scene_index)
             button_row = []
-            scene.set_launch_button(scene_launch_buttons[scene_index])
+            # scene.set_launch_button(scene_launch_buttons[scene_index])
             scene.set_triggered_value(2)
             for track_index in range(8):
                 button = ButtonElement(is_momentary, MIDI_NOTE_TYPE, track_index, (scene_index + 53))
@@ -85,7 +94,7 @@ class APC40(APC):
         self._session_zoom.set_button_matrix(matrix)
         self._session_zoom.set_zoom_button(self._shift_button)
         self._session_zoom.set_nav_buttons(up_button, down_button, left_button, right_button)
-        self._session_zoom.set_scene_bank_buttons(tuple(scene_launch_buttons))
+        #self._session_zoom.set_scene_bank_buttons(tuple(scene_launch_buttons))
         self._session_zoom.set_stopped_value(3)
         self._session_zoom.set_selected_value(5)
         return None #return session
